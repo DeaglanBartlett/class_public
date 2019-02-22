@@ -1067,120 +1067,187 @@ int transfer_get_q_list(
   q_logstep_spline = ppr->q_logstep_spline/pow(ptr->angular_rescaling,ppr->q_logstep_open);
   q_logstep_trapzd = ppr->q_logstep_trapzd;
 
-  /* very conservative estimate of number of values */
 
-  if (sgnK == 1) {
+//  /* Original guess of number of k values */
+//
+//  /* very conservative estimate of number of values */
+//
+//  if (sgnK == 1) {
+//
+//    q_approximation = MIN(ppr->hyper_flat_approximation_nu,(q_max/sqrt(K)));
+//
+//    /* max contribution from integer nu values */
+//    q_step = 1.+q_period*ppr->q_logstep_trapzd;
+//    q_size_max = 2*(int)(log(q_approximation/q_min)/log(q_step));
+//
+//    q_step = q_period*ppr->q_linstep;
+//    q_size_max += 2*(int)((q_approximation-q_min)/q_step);
+//
+//    /* max contribution from non-integer nu values */
+//    q_step = 1.+q_period*ppr->q_logstep_spline;
+//    q_size_max += 2*(int)(log(q_max/q_approximation)/log(q_step));
+//
+//    q_step = q_period*ppr->q_linstep;
+//    q_size_max += 2*(int)((q_max-q_approximation)/q_step);
+//
+//  }
+//  else {
+//
+//    /* max contribution from non-integer nu values */
+//    q_step = 1.+q_period*ppr->q_logstep_spline;
+//    q_size_max = 5*(int)(log(q_max/q_min)/log(q_step));
+//
+//    q_step = q_period*ppr->q_linstep;
+//    q_size_max += 5*(int)((q_max-q_min)/q_step);
+//
+//  }
+//
+//  /* create array with this conservative size estimate. The exact size
+//     will be readjusted below, after filling the array. */
+//
+//  class_alloc(ptr->q,
+//              q_size_max*sizeof(double),
+//              ptr->error_message);
+//
+//  */
+//
+//
+//  /* Original generation of k - commented out */
+//
+//  /* assign the first value before starting the loop */
+//
+//  index_q = 0;
+//  ptr->q[index_q] = q_min;
+//  nu = 3;
+//  index_q++;
+//
+//  /* loop over the values */
+//
+//  while (ptr->q[index_q-1] < q_max) {
+//
+//    class_test(index_q >= q_size_max,ptr->error_message,"buggy q-list definition");
+//
+//    /* step size formula in flat/open case. Step goes gradually from
+//       logarithmic to linear:
+//
+//       - in the small q limit, it is logarithmic with: (delta q / q) =
+//       q_period * q_logstep_spline
+//
+//       - in the large q limit, it is linear with: (delta q) = q_period
+//       * ppr->q_linstep
+//       */
+//
+//    if (sgnK<=0) {
+//
+//      q = ptr->q[index_q-1]
+//        + q_period * ppr->q_linstep * ptr->q[index_q-1]
+//        / (ptr->q[index_q-1] + ppr->q_linstep/q_logstep_spline);
+//
+//    }
+//
+//    /* step size formula in closed case. Same thing excepted that:
+//
+//       - in the small q limit, the logarithmic step is reduced, being
+//       given by q_logstep_trapzd, and values are rounded to integer
+//       values of nu=q/sqrt(K). This happens as long as
+//       nu<nu_flat_approximation
+//
+//       - for nu>nu_flat_approximation, the step gradually catches up
+//       the same expression as in the flat/open case, and there is no
+//       need to round up to integer nu's.
+//    */
+//
+//    else {
+//
+//      if (nu < (int)ppr->hyper_flat_approximation_nu) {
+//
+//        q = ptr->q[index_q-1]
+//          + q_period * ppr->q_linstep * ptr->q[index_q-1]
+//          / (ptr->q[index_q-1] + ppr->q_linstep/q_logstep_trapzd);
+//
+//        nu_proposed = (int)(q/sqrt(K));
+//        if (nu_proposed <= nu+1)
+//          nu = nu+1;
+//        else
+//          nu = nu_proposed;
+//
+//        q = nu*sqrt(K);
+//        last_step = q - ptr->q[index_q-1];
+//        last_index = index_q+1;
+//      }
+//      else {
+//
+//        q_step = q_period * ppr->q_linstep * ptr->q[index_q-1] / (ptr->q[index_q-1] + ppr->q_linstep/q_logstep_spline);
+//
+//        if (index_q-last_index < (int)ppr->q_numstep_transition)
+//          q = ptr->q[index_q-1] + (1-(double)(index_q-last_index)/ppr->q_numstep_transition) * last_step + (double)(index_q-last_index)/ppr->q_numstep_transition * q_step;
+//        else
+//          q = ptr->q[index_q-1] + q_step;
+//      }
+//    }
+//
+//    ptr->q[index_q] = q;
+//    index_q++;
+//  }
 
-    q_approximation = MIN(ppr->hyper_flat_approximation_nu,(q_max/sqrt(K)));
-
-    /* max contribution from integer nu values */
-    q_step = 1.+q_period*ppr->q_logstep_trapzd;
-    q_size_max = 2*(int)(log(q_approximation/q_min)/log(q_step));
-
-    q_step = q_period*ppr->q_linstep;
-    q_size_max += 2*(int)((q_approximation-q_min)/q_step);
-
-    /* max contribution from non-integer nu values */
-    q_step = 1.+q_period*ppr->q_logstep_spline;
-    q_size_max += 2*(int)(log(q_max/q_approximation)/log(q_step));
-
-    q_step = q_period*ppr->q_linstep;
-    q_size_max += 2*(int)((q_max-q_approximation)/q_step);
-
-  }
-  else {
-
-    /* max contribution from non-integer nu values */
-    q_step = 1.+q_period*ppr->q_logstep_spline;
-    q_size_max = 5*(int)(log(q_max/q_min)/log(q_step));
-
-    q_step = q_period*ppr->q_linstep;
-    q_size_max += 5*(int)((q_max-q_min)/q_step);
-
-  }
-
-  /* create array with this conservative size estimate. The exact size
-     will be readjusted below, after filling the array. */
-
-  class_alloc(ptr->q,
-              q_size_max*sizeof(double),
-              ptr->error_message);
-
-  /* assign the first value before starting the loop */
-
+  /* Generation of k using pre-calculated values in lasenby_k.txt */
+    
+  /* Estimate the number of k values */
+    
+  /* create array with this conservative size estimate. The exact size will be readjusted below, after filling the array. */
+    
+//  q_size_max = (int) q_max / 0.847;  // Using Lasenby's asymptotic spacing
+//
+//  class_alloc(ptr->q,
+//                q_size_max*sizeof(double),
+//                ptr->error_message);
+  
   index_q = 0;
-  ptr->q[index_q] = q_min;
-  nu = 3;
-  index_q++;
+    
+  FILE* ifp;
+    char ch;
+    
+  ifp = fopen("calculated_k.txt", "r");
 
-  /* loop over the values */
-
-  while (ptr->q[index_q-1] < q_max) {
-
-    class_test(index_q >= q_size_max,ptr->error_message,"buggy q-list definition");
-
-    /* step size formula in flat/open case. Step goes gradually from
-       logarithmic to linear:
-
-       - in the small q limit, it is logarithmic with: (delta q / q) =
-       q_period * q_logstep_spline
-
-       - in the large q limit, it is linear with: (delta q) = q_period
-       * ppr->q_linstep
-       */
-
-    if (sgnK<=0) {
-
-      q = ptr->q[index_q-1]
-        + q_period * ppr->q_linstep * ptr->q[index_q-1]
-        / (ptr->q[index_q-1] + ppr->q_linstep/q_logstep_spline);
-
-    }
-
-    /* step size formula in closed case. Same thing excepted that:
-
-       - in the small q limit, the logarithmic step is reduced, being
-       given by q_logstep_trapzd, and values are rounded to integer
-       values of nu=q/sqrt(K). This happens as long as
-       nu<nu_flat_approximation
-
-       - for nu>nu_flat_approximation, the step gradually catches up
-       the same expression as in the flat/open case, and there is no
-       need to round up to integer nu's.
-    */
-
-    else {
-
-      if (nu < (int)ppr->hyper_flat_approximation_nu) {
-
-        q = ptr->q[index_q-1]
-          + q_period * ppr->q_linstep * ptr->q[index_q-1]
-          / (ptr->q[index_q-1] + ppr->q_linstep/q_logstep_trapzd);
-
-        nu_proposed = (int)(q/sqrt(K));
-        if (nu_proposed <= nu+1)
-          nu = nu+1;
-        else
-          nu = nu_proposed;
-
-        q = nu*sqrt(K);
-        last_step = q - ptr->q[index_q-1];
-        last_index = index_q+1;
-      }
-      else {
-
-        q_step = q_period * ppr->q_linstep * ptr->q[index_q-1] / (ptr->q[index_q-1] + ppr->q_linstep/q_logstep_spline);
-
-        if (index_q-last_index < (int)ppr->q_numstep_transition)
-          q = ptr->q[index_q-1] + (1-(double)(index_q-last_index)/ppr->q_numstep_transition) * last_step + (double)(index_q-last_index)/ppr->q_numstep_transition * q_step;
-        else
-          q = ptr->q[index_q-1] + q_step;
-      }
-    }
-
-    ptr->q[index_q] = q;
-    index_q++;
+  if (ifp == NULL) {
+    fprintf(stderr, "Can't open input file calculated_k.txt\n");
+    exit(1);
   }
+    
+  /* Count number of lines in file and use as max size of q array*/
+    int total_lines = 0;
+    while(fscanf(ifp, "%lf", &q) != EOF){
+        total_lines++;
+    }
+    
+    q_size_max = total_lines;
+    class_alloc(ptr->q,
+                q_size_max*sizeof(double),
+                ptr->error_message);
+    
+  fclose(ifp);
+    
+  ifp = fopen("calculated_k.txt", "r");
+    
+  if (ifp == NULL) {
+      fprintf(stderr, "Can't open input file calculated_k.txt\n");
+      exit(1);
+  }
+    
+    
+  while(fscanf(ifp, "%lf", &q) != EOF) {
+
+    if (q < q_max) {
+        
+      class_test(index_q >= q_size_max,ptr->error_message,"buggy q-list definition");
+      ptr->q[index_q] = q;
+      index_q++;
+
+    }
+
+  }
+
+    fclose(ifp);
 
   /* infer total number of values (also checking if we overshot the last point) */
 

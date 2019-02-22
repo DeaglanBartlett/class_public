@@ -2729,6 +2729,9 @@ int spectra_compute_cl(
       if (pba->sgnK == 1) {
         index_q_spline = ptr->index_q_flat_approximation;
       }
+        
+        /* Enforce trapezoidal integration everywhere */
+        index_q_spline = ptr->q_size-1;
 
       class_call(array_integrate_all_trapzd_or_spline(cl_integrand,
                                                       cl_integrand_num_columns,
@@ -2751,10 +2754,13 @@ int spectra_compute_cl(
          compared to what it would be in the an actual discrete
          sum. The line below correct this problem in an exact way.
       */
-
-      if (pba->sgnK == 1) {
+        
+        // Now enforce this for any K since discretised
         clvalue += cl_integrand[1+index_ct] * ptr->q[0]/ptr->k[0][0]*sqrt(pba->K)/2.;
-      }
+
+//      if (pba->sgnK == 1) {
+//        clvalue += cl_integrand[1+index_ct] * ptr->q[0]/ptr->k[0][0]*sqrt(pba->K)/2.;
+//      }
 
       /* we have the correct C_l now. We can store it in the transfer structure. */
 

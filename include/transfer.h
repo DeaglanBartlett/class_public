@@ -8,6 +8,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include "errno.h"
+#include <stdio.h>
 
 /* macro: test if index_tt is in the range between index and index+num, while the flag is true */
 #define _index_tt_in_range_(index,num,flag) (flag == _TRUE_) && (index_tt >= index) && (index_tt < index+num)
